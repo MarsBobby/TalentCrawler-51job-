@@ -270,23 +270,26 @@ if not df_exp.empty:
 st.markdown("---")
 
 # ══════════════════════════════════════════════════════════
-# Panel H：学历 - 经验热力图
+# Panel H：学历 × 工作经验联合薪资热力图
 # ══════════════════════════════════════════════════════════
-st.markdown("## Panel H：学历 - 工作经验联合薪资热力图")
+st.markdown("## Panel H：学历 × 工作经验联合薪资热力图")
 edu_order = ["大专", "本科", "硕士", "博士"]
+exp_order = ["无经验", "1-3年", "3-5年", "5-10年"]
 df_sub = df_filtered[df_filtered["education"].isin(edu_order) & df_filtered["experience"].isin(exp_order)].copy()
 if not df_sub.empty:
     pivot = df_sub.pivot_table(values="salary_numeric", index="education",
                                columns="experience", aggfunc="mean").reindex(index=edu_order, columns=exp_order)
     count_pivot = df_sub.pivot_table(values="salary_numeric", index="education",
                                      columns="experience", aggfunc="count").reindex(index=edu_order, columns=exp_order)
-    pivot_display = pivot.copy()
-    for i in pivot.index:
-        for j in pivot.columns:
-            if not pd.isna(pivot.loc[i, j]):
-                pivot_display.loc[i, j] = f"{pivot.loc[i, j]:.1f}k (n={int(count_pivot.loc[i, j])})"
+    
+    # 创建显示用的 DataFrame，处理 NaN 值
+    pivot_display = pd.DataFrame(index=pivot.index, columns=pivot.columns)
+    for i, edu in enumerate(pivot.index):
+        for j, exp in enumerate(pivot.columns):
+            if pd.isna(pivot.loc[edu, exp]) or pd.isna(count_pivot.loc[edu, exp]):
+                pivot_display.loc[edu, exp] = "—"
             else:
-                pivot_display.loc[i, j] = "—"
+                pivot_display.loc[edu, exp] = f"{pivot.loc[edu, exp]:.1f}k (n={int(count_pivot.loc[edu, exp])})"
 
     fig_h = go.Figure(data=go.Heatmap(
         z=pivot.values,
@@ -299,11 +302,12 @@ if not df_sub.empty:
         colorbar=dict(title="月薪(k)"),
     ))
     fig_h.update_layout(
-        title="学历 - 经验联合薪资热力图（单元格: 均薪/样本量）",
+        title="学历 × 经验联合薪资热力图（单元格: 均薪/样本量）",
         xaxis_title="工作年限要求", yaxis_title="学历要求",
         height=400,
     )
     st.plotly_chart(fig_h, use_container_width=True)
+
 
 st.markdown("---")
 st.caption("📌 数据看板基于招聘平台公开数据 | 由 Streamlit + Plotly 驱动")
