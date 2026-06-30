@@ -45,7 +45,7 @@ def load_and_prepare(data_path: str) -> pd.DataFrame:
 # ── 加载数据 ──────────────────────────────────────────────
 data_path = st.sidebar.selectbox(
     "选择数据文件",
-    ["./output/cleaned_recruitment_data.csv"],
+    ["./download/output/cleaned_recruitment_data.csv"],
     index=0,
 )
 
